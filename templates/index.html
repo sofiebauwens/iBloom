@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}iBloom - Start Your Wellness Journey{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                <span class="hero-emoji">🌸</span>
+                Welcome to iBloom
+            </h1>
+            <p class="hero-subtitle">
+                Anonymous daily check-ins powered by AI to prevent burnout before it happens
+            </p>
+            <div class="hero-features">
+                <div class="feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>100% Anonymous</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-robot"></i>
+                    <span>AI-Powered Insights</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-heart"></i>
+                    <span>Preventive Care</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="registration-card">
+            <h2>Start Your Journey</h2>
+            <p>Anonymous registration - no personal information required</p>
+
+            <form id="registrationForm" class="registration-form">
+                <div class="form-group">
+                    <label for="companyId">
+                        <i class="fas fa-building"></i>
+                        Company ID *
+                    </label>
+                    <input
+                            type="text"
+                            id="companyId"
+                            name="company_id"
+                            required
+                            placeholder="e.g., acme-corp"
+                            autocomplete="organization"
+                    >
+                    <small>Ask your HR team for your company ID</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="department">
+                        <i class="fas fa-users"></i>
+                        Department (Optional)
+                    </label>
+                    <select id="department" name="department">
+                        <option value="">Select your department</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="product">Product</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="sales">Sales</option>
+                        <option value="customer-success">Customer Success</option>
+                        <option value="hr">Human Resources</option>
+                        <option value="finance">Finance</option>
+                        <option value="operations">Operations</option>
+                        <option value="legal">Legal</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="roleLevel">
+                        <i class="fas fa-layer-group"></i>
+                        Role Level (Optional)
+                    </label>
+                    <select id="roleLevel" name="role_level">
+                        <option value="">Select your level</option>
+                        <option value="individual-contributor">Individual Contributor</option>
+                        <option value="senior-individual">Senior Individual Contributor</option>
+                        <option value="team-lead">Team Lead</option>
+                        <option value="manager">Manager</option>
+                        <option value="senior-manager">Senior Manager</option>
+                        <option value="director">Director</option>
+                        <option value="vp">VP/Executive</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large">
+                    <i class="fas fa-rocket"></i>
+                    Start Daily Check-ins
+                </button>
+
+                <div class="form-footer">
+                    <p>
+                        <i class="fas fa-lock"></i>
+                        Your responses are anonymous and encrypted.
+                        Only aggregate, non-identifying insights are shared with your organization.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="info-section">
+    <div class="container">
+        <h2>How iBloom Helps Prevent Burnout</h2>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-icon">🤖</div>
+                <h3>Daily AI Check-ins</h3>
+                <p>Smart questions that adapt to your responses, taking just 2-3 minutes each day</p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">📊</div>
+                <h3>Early Detection</h3>
+                <p>Identify burnout warning signs before they become serious mental health issues</p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">🎯</div>
+                <h3>Personalized Support</h3>
+                <p>Get specific recommendations for stress management, mindfulness, and wellness resources</p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">🛡️</div>
+                <h3>Anonymous & Safe</h3>
+                <p>No personal data collected. Safe space to share your true feelings without judgment</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="container">
+        <h2>The Burnout Crisis</h2>
+        <div class="stats-grid">
+            <div class="stat">
+                <div class="stat-number">76%</div>
+                <div class="stat-label">of employees experience burnout</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">$190B</div>
+                <div class="stat-label">annual cost to employers</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">52%</div>
+                <div class="stat-label">don't feel safe discussing mental health at work</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">2-3</div>
+                <div class="stat-label">minutes daily can make a difference</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            company_id: formData.get('company_id'),
+            department: formData.get('department'),
+            role_level: formData.get('role_level')
+        };
+
+        // Show loading
+        showLoading();
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('Welcome to iBloom! Redirecting to your first check-in...', 'success');
+                setTimeout(() => {
+                    window.location.href = result.redirect;
+                }, 2000);
+            } else {
+                showMessage(result.error || 'Registration failed', 'error');
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            showMessage('Registration failed. Please try again.', 'error');
+        } finally {
+            hideLoading();
+        }
+    });
+
+    // Auto-format company ID as user types
+    document.getElementById('companyId').addEventListener('input', function(e) {
+        // Convert to lowercase and replace spaces with hyphens
+        let value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Check-in - iBloom{% endblock %}
+
+{% block content %}
+<div class="questionnaire-container">
+    <div class="questionnaire-header">
+        <h1>
+            <span class="daily-icon">☀️</span>
+            Daily Wellness Check-in
+        </h1>
+        <p>Take a moment to reflect on how you're feeling today. Your responses help us support you better.</p>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-text" id="progressText">Question 1 of 5</span>
+        </div>
+    </div>
+
+    <div class="questionnaire-content">
+        <!-- Loading State -->
+        <div id="loadingQuestions" class="loading-state">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <p>Generating your personalized questions...</p>
+        </div>
+
+        <!-- Question Form -->
+        <form id="questionnaireForm" class="questionnaire-form" style="display: none;">
+            <div id="questionsContainer">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="prevBtn" class="btn btn-secondary" onclick="changeQuestion(-1)" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+
+                <button type="button" id="nextBtn" class="btn btn-primary" onclick="changeQuestion(1)" style="display: none;">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">
+                    <i class="fas fa-check"></i> Complete Check-in
+                </button>
+            </div>
+        </form>
+
+        <!-- Results Display -->
+        <div id="resultsContainer" class="results-container" style="display: none;">
+            <div class="results-header">
+                <h2>
+                    <span id="resultsIcon">✅</span>
+                    Your Wellness Snapshot
+                </h2>
+            </div>
+
+            <div class="results-content">
+                <div class="wellness-score">
+                    <div class="score-circle" id="scoreCircle">
+                        <span class="score-number" id="scoreNumber">--</span>
+                        <span class="score-label">Wellness Score</span>
+                    </div>
+                    <div class="score-interpretation" id="scoreInterpretation">
+                        <!-- Dynamic interpretation -->
+                    </div>
+                </div>
+
+                <div class="insights-section">
+                    <h3><i class="fas fa-lightbulb"></i> Today's Insights</h3>
+                    <div id="concernsList" class="concerns-list">
+                        <!-- Dynamic concerns -->
+                    </div>
+                </div>
+
+                <div class="recommendations-section">
+                    <h3><i class="fas fa-leaf"></i> Recommended Actions</h3>
+                    <div id="recommendationsList" class="recommendations-list">
+                        <!-- Dynamic recommendations -->
+                    </div>
+                </div>
+
+                <div class="next-steps">
+                    <h3><i class="fas fa-calendar-check"></i> Next Steps</h3>
+                    <div class="next-step-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Next Check-in:</strong>
+                            <span id="nextCheckIn">Tomorrow at this time</span>
+                        </div>
+                    </div>
+                    <div class="next-step-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <a href="{{ url_for('dashboard') }}" class="link">
+                                View your progress dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-actions">
+                <button onclick="location.href='{{ url_for('dashboard') }}'" class="btn btn-primary">
+                    <i class="fas fa-chart-line"></i> View Dashboard
+                </button>
+                <button onclick="startNewCheckIn()" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Start New Check-in
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Templates -->
+<template id="scaleQuestionTemplate">
+    <div class="question-slide">
+        <div class="question-content">
+            <h3 class="question-text"></h3>
+            <div class="scale-container">
+                <div class="scale-labels">
+                    <span class="scale-start"></span>
+                    <span class="scale-end"></span>
+                </div>
+                <div class="scale-input">
+                    <input type="range" class="scale-slider" min="1" max="10" value="5" step="1">
+                    <div class="scale-value">5</div>
+                </div>
+                <div class="scale-numbers">
+                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                    <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="textQuestionTemplate">
+    <div class="question-slide">
+        <div class="question-content">
+            <h3 class="question-text"></h3>
+            <div class="text-input-container">
+                <textarea class="text-input" rows="3" maxlength="500"></textarea>
+                <div class="char-count">0/500</div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let responses = [];
+    let startTime = Date.now();
+
+    // Initialize questionnaire
+    document.addEventListener('DOMContentLoaded', function() {
+        loadQuestions();
+    });
+
+    async function loadQuestions() {
+        try {
+            showLoading();
+
+            const response = await fetch('/api/questions');
+            const data = await response.json();
+
+            if (data.questions) {
+                questions = data.questions;
+                responses = new Array(questions.length).fill(null);
+                displayQuestions();
+            } else {
+                throw new Error(data.error || 'Failed to load questions');
+            }
+        } catch (error) {
+            console.error('Error loading questions:', error);
+            showMessage('Failed to load questions. Please refresh and try again.', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function displayQuestions() {
+        const container = document.getElementById('questionsContainer');
+        const form = document.getElementById('questionnaireForm');
+        const loading = document.getElementById('loadingQuestions');
+
+        // Hide loading, show form
+        loading.style.display = 'none';
+        form.style.display = 'block';
+
+        // Create question slides
+        questions.forEach((question, index) => {
+            const slide = createQuestionSlide(question, index);
+            container.appendChild(slide);
+        });
+
+        // Show first question
+        showQuestion(0);
+    }
+
+    function createQuestionSlide(question, index) {
+        const template = question.type === 'scale'
+            ? document.getElementById('scaleQuestionTemplate')
+            : document.getElementById('textQuestionTemplate');
+
+        const slide = template.content.cloneNode(true);
+        const slideElement = slide.querySelector('.question-slide');
+        slideElement.id = `question-${index}`;
+
+        // Set question text
+        slide.querySelector('.question-text').textContent = question.question;
+
+        if (question.type === 'scale') {
+            // Setup scale question
+            const labels = question.scale_label.split(',');
+            slide.querySelector('.scale-start').textContent = labels[0] || '1 = Low';
+            slide.querySelector('.scale-end').textContent = labels[1] || '10 = High';
+
+            const slider = slide.querySelector('.scale-slider');
+            const valueDisplay = slide.querySelector('.scale-value');
+
+            slider.addEventListener('input', function() {
+                valueDisplay.textContent = this.value;
+                responses[index] = parseInt(this.value);
+                updateNavigationButtons();
+            });
+
+        } else {
+            // Setup text question
+            const textarea = slide.querySelector('.text-input');
+            const charCount = slide.querySelector('.char-count');
+
+            if (question.placeholder) {
+                textarea.placeholder = question.placeholder;
+            }
+
+            textarea.addEventListener('input', function() {
+                const length = this.value.length;
+                charCount.textContent = `${length}/500`;
+                responses[index] = this.value.trim();
+                updateNavigationButtons();
+            });
+        }
+
+        return slide;
+    }
+
+    function showQuestion(index) {
+        // Hide all questions
+        document.querySelectorAll('.question-slide').forEach(slide => {
+            slide.style.display = 'none';
+        });
+
+        // Show current question
+        const currentSlide = document.getElementById(`question-${index}`);
+        if (currentSlide) {
+            currentSlide.style.display = 'block';
+        }
+
+        currentQuestionIndex = index;
+        updateProgress();
+        updateNavigationButtons();
+    }
+
+    function changeQuestion(direction) {
+        const newIndex = currentQuestionIndex + direction;
+
+        if (newIndex >= 0 && newIndex < questions.length) {
+            showQuestion(newIndex);
+        }
+    }
+
+    function updateProgress() {
+        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressText').textContent =
+            `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    }
+
+    function updateNavigationButtons() {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Show/hide previous button
+        prevBtn.style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+
+        // Check if current question is answered
+        const currentResponse = responses[currentQuestionIndex];
+        const isAnswered = currentResponse !== null && currentResponse !== undefined && currentResponse !== '';
+
+        if (currentQuestionIndex < questions.length - 1) {
+            // Not the last question
+            nextBtn.style.display = isAnswered ? 'inline-block' : 'none';
+            submitBtn.style.display = 'none';
+        } else {
+            // Last question
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = isAnswered ? 'inline-block' : 'none';
+        }
+    }
+
+    // Form submission
+    document.getElementById('questionnaireForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Validate all questions are answered
+        const unanswered = responses.findIndex(r => r === null || r === undefined || r === '');
+        if (unanswered !== -1) {
+            showMessage(`Please answer question ${unanswered + 1}`, 'warning');
+            showQuestion(unanswered);
+            return;
+        }
+
+        try {
+            showLoading('Analyzing your responses...');
+
+            const responseTime = Math.floor((Date.now() - startTime) / 1000);
+
+            const response = await fetch('/api/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    questions: questions,
+                    responses: responses,
+                    response_time_seconds: responseTime
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                displayResults(result.analysis);
+            } else {
+                throw new Error(result.error || 'Failed to submit responses');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            showMessage('Failed to submit responses. Please try again.', 'error');
+        } finally {
+            hideLoading();
+        }
+    });
+
+    function displayResults(analysis) {
+        // Hide form, show results
+        document.getElementById('questionnaireForm').style.display = 'none';
+        document.getElementById('resultsContainer').style.display = 'block';
+
+        // Update score
+        const score = analysis.score || 0;
+        document.getElementById('scoreNumber').textContent = score;
+
+        // Update score circle color and interpretation
+        const scoreCircle = document.getElementById('scoreCircle');
+        const interpretation = document.getElementById('scoreInterpretation');
+        const resultsIcon = document.getElementById('resultsIcon');
+
+        if (score <= 25) {
+            scoreCircle.className = 'score-circle low-risk';
+            interpretation.innerHTML = '<strong>Healthy Range:</strong> You\'re managing well! Keep up the good work.';
+            resultsIcon.textContent = '😊';
+        } else if (score <= 50) {
+            scoreCircle.className = 'score-circle mild-risk';
+            interpretation.innerHTML = '<strong>Mild Concern:</strong> Some early warning signs detected. Let\'s address them proactively.';
+            resultsIcon.textContent = '😐';
+        } else if (score <= 75) {
+            scoreCircle.className = 'score-circle moderate-risk';
+            interpretation.innerHTML = '<strong>Moderate Risk:</strong> Intervention recommended. Please consider the suggestions below.';
+            resultsIcon.textContent = '😟';
+        } else {
+            scoreCircle.className = 'score-circle high-risk';
+            interpretation.innerHTML = '<strong>High Risk:</strong> Immediate support recommended. Please reach out for help.';
+            resultsIcon.textContent = '😰';
+        }
+
+        // Display concerns
+        const concernsList = document.getElementById('concernsList');
+        concernsList.innerHTML = '';
+
+        if (analysis.concerns && analysis.concerns.length > 0) {
+            analysis.concerns.forEach(concern => {
+                const concernItem = document.createElement('div');
+                concernItem.className = 'concern-item';
+                concernItem.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${concern}`;
+                concernsList.appendChild(concernItem);
+            });
+        } else {
+            concernsList.innerHTML = '<div class="no-concerns"><i class="fas fa-check-circle"></i> No significant concerns detected</div>';
+        }
+
+        // Display recommendations
+        const recommendationsList = document.getElementById('recommendationsList');
+        recommendationsList.innerHTML = '';
+
+        if (analysis.recommendations && analysis.recommendations.length > 0) {
+            analysis.recommendations.forEach(rec => {
+                const recItem = document.createElement('div');
+                recItem.className = 'recommendation-item';
+
+                let icon = 'fas fa-lightbulb';
+                if (rec.type === 'immediate') icon = 'fas fa-clock';
+                else if (rec.type === 'module') icon = 'fas fa-graduation-cap';
+                else if (rec.type === 'preventive') icon = 'fas fa-shield-alt';
+
+                const text = rec.action || rec.title || rec.habit || rec;
+                recItem.innerHTML = `<i class="${icon}"></i> ${text}`;
+                recommendationsList.appendChild(recItem);
+            });
+        }
+
+        // Scroll to results
+        document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function startNewCheckIn() {
+        if (confirm('Are you sure you want to start a new check-in? Your current results will be saved.')) {
+            location.reload();
+        }
+    }
+</script>
+{% endblock %}

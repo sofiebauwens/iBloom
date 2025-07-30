@@ -1,0 +1,8 @@
+ibloom/
+*.pyc
+__pycache__/
+.env
+instance/
+*.db
+.DS_Store
+node_modules/

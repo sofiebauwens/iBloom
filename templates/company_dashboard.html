@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+
+{% block title %}Company Analytics - Bloom{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="company-dashboard">
+  <div class="dashboard-header">
+    <h1>
+      <span class="dashboard-icon">🏢</span>
+      Company Wellness Analytics
+    </h1>
+    <p>Anonymous insights to improve workplace wellbeing</p>
+
+    <div class="time-filter">
+      <button class="filter-btn active" data-period="7d">Last 7 Days</button>
+      <button class="filter-btn" data-period="30d">Last 30 Days</button>
+      <button class="filter-btn" data-period="90d">Last 3 Months</button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Overview -->
+  <div class="metrics-overview">
+    <div class="metric-card risk-level high">
+      <div class="metric-icon">🚨</div>
+      <div class="metric-content">
+        <div class="metric-number" id="highRiskCount">--</div>
+        <div class="metric-label">High Risk Employees</div>
+        <div class="metric-trend" id="highRiskTrend">+12% vs last period</div>
+      </div>
+    </div>
+
+    <div class="metric-card risk-level medium">
+      <div class="metric-icon">⚠️</div>
+      <div class="metric-content">
+        <div class="metric-number" id="mediumRiskCount">--</div>
+        <div class="metric-label">Medium Risk Employees</div>
+        <div class="metric-trend" id="mediumRiskTrend">-5% vs last period</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon">📊</div>
+      <div class="metric-content">
+        <div class="metric-number" id="avgWellnessScore">--</div>
+        <div class="metric-label">Average Wellness Score</div>
+        <div class="metric-trend" id="wellnessTrend">+2.3 pts vs last period</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon">✅</div>
+      <div class="metric-content">
+        <div class="metric-number" id="participationRate">--</div>
+        <div class="metric-label">Participation Rate</div>
+        <div class="metric-trend" id="participationTrend">+8% vs last period</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Breakdown -->
+  <div class="analytics-grid">
+    <div class="chart-card large">
+      <div class="chart-header">
+        <h3><i class="fas fa-building"></i> Wellness by Department</h3>
+        <div class="chart-actions">
+          <button class="chart-toggle active" data-view="score">Average Score</button>
+          <button class="chart-toggle" data-view="risk">Risk Distribution</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="departmentChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i class="fas fa-chart-line"></i> Wellness Trend</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights & Recommendations -->
+  <div class="insights-section">
+    <div class="insight-card">
+      <div class="insight-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Top Concerns Across Organization</h3>
+      </div>
+      <div class="concerns-grid" id="topConcerns">
+        <div class="concern-item">
+          <div class="concern-bar">
+            <div class="concern-fill" style="width: 68%"></div>
+          </div>
+          <div class="concern-label">Heavy workload</div>
+          <div class="concern-count">68% of responses</div>
+        </div>
+
+        <div class="concern-item">
+          <div class="concern-bar">
+            <div class="concern-fill" style="width: 45%"></div>
+          </div>
+          <div class="concern-label">Work-life balance</div>
+          <div class="concern-count">45% of responses</div>
+        </div>
+
+        <div class="concern-item">
+          <div class="concern-bar">
+            <div class="concern-fill" style="width: 38%"></div>
+          </div>
+          <div class="concern-label">Lack of recognition</div>
+          <div class="concern-count">38% of responses</div>
+        </div>
+
+        <div class="concern-item">
+          <div class="concern-bar">
+            <div class="concern-fill" style="width: 32%"></div>
+          </div>
+          <div class="concern-label">Communication issues</div>
+          <div class="concern-count">32% of responses</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-card">
+      <div class="insight-header">
+        <h3><i class="fas fa-lightbulb"></i> Recommended Organizational Actions</h3>
+      </div>
+      <div class="recommendations-list">
+        <div class="recommendation-item priority-high">
+          <div class="rec-priority">High Priority</div>
+          <div class="rec-content">
+            <strong>Address Workload Distribution</strong>
+            <p>68% of employees report heavy workload. Consider redistributing tasks or hiring additional staff in affected departments.</p>
+            <div class="rec-departments">Affected: Engineering, Sales, Marketing</div>
+          </div>
+        </div>
+
+        <div class="recommendation-item priority-medium">
+          <div class="rec-priority">Medium Priority</div>
+          <div class="rec-content">
+            <strong>Improve Work-Life Balance Policies</strong>
+            <p>Implement flexible working arrangements and enforce boundaries around after-hours communication.</p>
+            <div class="rec-departments">Company-wide initiative</div>
+          </div>
+        </div>
+
+        <div class="recommendation-item priority-low">
+          <div class="rec-priority">Low Priority</div>
+          <div class="rec-content">
+            <strong>Enhance Recognition Programs</strong>
+            <p>Develop more visible employee recognition systems to address the 38% reporting lack of acknowledgment.</p>
+            <div class="rec-departments">HR initiative with management training</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Department Analysis -->
+  <div class="department-analysis">
+    <h2>Department Deep Dive</h2>
+    <div class="department-grid" id="departmentDetails">
+      <!-- Department cards will be populated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Export & Actions -->
+  <div class="dashboard-actions">
+    <button onclick="exportCompanyReport()" class="btn btn-primary">
+      <i class="fas fa-download"></i> Export Company Report
+    </button>
+
+    <button onclick="scheduleReport()" class="btn btn-secondary">
+      <i class="fas fa-calendar"></i> Schedule Weekly Reports
+    </button>
+
+    <button onclick="shareInsights()" class="btn btn-secondary">
+      <i class="fas fa-share"></i> Share Insights
+    </button>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div id="companyExportModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-download"></i> Export Company Analytics</h2>
+      <span class="close" onclick="hideCompanyExportModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Generate comprehensive analytics report for leadership and HR teams.</p>
+
+      <div class="export-options">
+        <div class="export-option">
+          <input type="checkbox" id="includeOverview" checked>
+          <label for="includeOverview">Executive Overview</label>
+        </div>
+        <div class="export-option">
+          <input type="checkbox" id="includeDepartments" checked>
+          <label for="includeDepartments">Department Breakdown</label>
+        </div>
+        <div class="export-option">
+          <input type="checkbox" id="includeTrends" checked>
+          <label for="includeTrends">Trend Analysis</label>
+        </div>
+        <div class="export-option">
+          <input type="checkbox" id="includeRecommendations" checked>
+          <label for="includeRecommendations">Action Recommendations</label>
+        </div>
+      </div>
+
+      <div class="export-format">
+        <h4>Export Format:</h4>
+        <div class="format-options">
+          <button onclick="exportCompanyData('pdf')" class="btn btn-primary">
+            <i class="fas fa-file-pdf"></i> PDF Report
+          </button>
+          <button onclick="exportCompanyData('excel')" class="btn btn-secondary">
+            <i class="fas fa-file-excel"></i> Excel Workbook
+          </button>
+        </div>
+      </div>
+
+      <div class="privacy-notice">
+        <i class="fas fa-shield-alt"></i>
+        <small>All data is anonymized and aggregated. Individual employee responses cannot be identified.</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentPeriod = '7d';
+  let departmentChart = null;
+  let trendChart = null;
+
+  // Initialize company dashboard
+  document.addEventListener('DOMContentLoaded', function() {
+    loadCompanyAnalytics();
+    setupFilterButtons();
+  });
+
+  function setupFilterButtons() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update period and reload data
+        currentPeriod = this.dataset.period;
+        loadCompanyAnalytics();
+      });
+    });
+
+    // Chart toggle buttons
+    document.querySelectorAll('.chart-toggle').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.chart-toggle').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        updateDepartmentChart(this.dataset.view);
+      });
+    });
+  }
+
+  async function loadCompanyAnalytics() {
+    try {
+      showLoading('Loading company analytics...');
+
+      const response = await fetch(`/api/company-analytics?period=${currentPeriod}`);
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Update metrics
+      updateMetrics(data);
+
+      // Update charts
+      updateDepartmentChart('score', data.department_breakdown);
+      updateTrendChart(data.trend_data);
+
+      // Update insights
+      updateConcerns(data.top_concerns);
+      updateDepartmentDetails(data.department_breakdown);
+
+    } catch (error) {
+      console.error('Company analytics error:', error);
+      showMessage('Failed to load company analytics', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  function updateMetrics(data) {
+    // Animate metric numbers
+    animateNumber(document.getElementById('highRiskCount'), 0, data.high_risk_count || 0);
+    animateNumber(document.getElementById('mediumRiskCount'), 0, data.medium_risk_count || 0);
+
+    const avgScore = document.getElementById('avgWellnessScore');
+    if (avgScore) {
+      avgScore.textContent = (data.avg_wellness_score || 0).toFixed(1);
+    }
+
+    const participation = document.getElementById('participationRate');
+    if (participation) {
+      participation.textContent = Math.round((data.participation_rate || 0) * 100) + '%';
+    }
+
+    // Update trend indicators (mock data for demo)
+    updateTrendIndicator('highRiskTrend', '+12%', 'negative');
+    updateTrendIndicator('mediumRiskTrend', '-5%', 'positive');
+    updateTrendIndicator('wellnessTrend', '+2.3 pts', 'positive');
+    updateTrendIndicator('participationTrend', '+8%', 'positive');
+  }
+
+  function updateTrendIndicator(elementId, text, type) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = text + ' vs last period';
+      element.className = `metric-trend ${type}`;
+    }
+  }
+
+  function updateDepartmentChart(view, data = null) {
+    const ctx = document.getElementById('departmentChart').getContext('2d');
+
+    // Destroy existing chart
+    if (departmentChart) {
+      departmentChart.destroy();
+    }
+
+    // Sample data if none provided
+    if (!data) {
+      data = [
+        { department: 'Engineering', avg_score: 65, high_risk: 8, medium_risk: 15, total: 45 },
+        { department: 'Sales', avg_score: 58, high_risk: 12, medium_risk: 18, total: 35 },
+        { department: 'Marketing', avg_score: 72, high_risk: 3, medium_risk: 8, total: 28 },
+        { department: 'HR', avg_score: 78, high_risk: 1, medium_risk: 4, total: 15 },
+        { department: 'Finance', avg_score: 69, high_risk: 2, medium_risk: 6, total: 22 }
+      ];
+    }
+
+    let chartData, chartOptions;
+
+    if (view === 'score') {
+      chartData = {
+        labels: data.map(d => d.department),
+        datasets: [{
+          label: 'Average Wellness Score',
+          data: data.map(d => d.avg_score),
+          backgroundColor: data.map(d => {
+            if (d.avg_score >= 70) return '#28a745';
+            if (d.avg_score >= 60) return '#ffc107';
+            return '#dc3545';
+          }),
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      };
+
+      chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            title: {
+              display: true,
+              text: 'Wellness Score'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      };
+    } else {
+      // Risk distribution view
+      chartData = {
+        labels: data.map(d => d.department),
+        datasets: [
+          {
+            label: 'High Risk',
+            data: data.map(d => d.high_risk),
+            backgroundColor: '#dc3545'
+          },
+          {
+            label: 'Medium Risk',
+            data: data.map(d => d.medium_risk),
+            backgroundColor: '#ffc107'
+          },
+          {
+            label: 'Low Risk',
+            data: data.map(d => d.total - d.high_risk - d.medium_risk),
+            backgroundColor: '#28a745'
+          }
+        ]
+      };
+
+      chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true
+          },
+          y: {
+            stacked: true,
+            title: {
+              display: true,
+              text: 'Number of Employees'
+            }
+          }
+        }
+      };
+    }
+
+    departmentChart = new Chart(ctx, {
+      type: view === 'score' ? 'bar' : 'bar',
+      data: chartData,
+      options: chartOptions
+    });
+  }
+
+  function updateTrendChart(data) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+
+    // Destroy existing chart
+    if (trendChart) {
+      trendChart.destroy();
+    }
+
+    // Sample data if none provided
+    if (!data || data.length === 0) {
+      const dates = [];
+      const scores = [];
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        scores.push(65 + Math.random() * 15); // Random scores between 65-80
+      }
+      data = dates.map((date, i) => ({ date, avg_score: scores[i] }));
+    }
+
+    trendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: 'Company Average',
+          data: data.map(d => d.avg_score),
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  function updateConcerns(concerns) {
+    if (!concerns || concerns.length === 0) return;
+
+    const container = document.getElementById('topConcerns');
+    container.innerHTML = '';
+
+    concerns.forEach(concern => {
+      const concernElement = document.createElement('div');
+      concernElement.className = 'concern-item';
+      concernElement.innerHTML = `
+            <div class="concern-bar">
+                <div class="concern-fill" style="width: ${concern.percentage}%"></div>
+            </div>
+            <div class="concern-label">${concern.name}</div>
+            <div class="concern-count">${concern.percentage}% of responses</div>
+        `;
+      container.appendChild(concernElement);
+    });
+  }
+
+  function updateDepartmentDetails(departments) {
+    const container = document.getElementById('departmentDetails');
+    container.innerHTML = '';
+
+    departments.forEach(dept => {
+      const deptCard = document.createElement('div');
+      deptCard.className = 'department-card';
+
+      const riskLevel = dept.avg_score >= 70 ? 'low' : dept.avg_score >= 60 ? 'medium' : 'high';
+
+      deptCard.innerHTML = `
+            <div class="dept-header">
+                <h4>${dept.department}</h4>
+                <div class="dept-score ${riskLevel}">${dept.avg_score}</div>
+            </div>
+            <div class="dept-stats">
+                <div class="dept-stat">
+                    <span class="stat-label">Total Employees</span>
+                    <span class="stat-value">${dept.total}</span>
+                </div>
+                <div class="dept-stat">
+                    <span class="stat-label">High Risk</span>
+                    <span class="stat-value risk-high">${dept.high_risk}</span>
+                </div>
+                <div class="dept-stat">
+                    <span class="stat-label">Medium Risk</span>
+                    <span class="stat-value risk-medium">${dept.medium_risk}</span>
+                </div>
+            </div>
+        `;
+
+      container.appendChild(deptCard);
+    });
+  }
+
+  // Export functions
+  function exportCompanyReport() {
+    document.getElementById('companyExportModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideCompanyExportModal() {
+    document.getElementById('companyExportModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  async function exportCompanyData(format) {
+    try {
+      showLoading('Generating company report...');
+
+      const options = {
+        overview: document.getElementById('includeOverview').checked,
+        departments: document.getElementById('includeDepartments').checked,
+        trends: document.getElementById('includeTrends').checked,
+        recommendations: document.getElementById('includeRecommendations').checked
+      };
+
+      const response = await fetch('/api/export-company-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format, options, period: currentPeriod })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const filename = `company-wellness-report-${currentPeriod}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        downloadFile(blob, filename);
+        hideCompanyExportModal();
+        showMessage('Company report generated successfully', 'success');
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      showMessage('Failed to generate report', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  function scheduleReport() {
+    showMessage('Report scheduling feature coming soon!', 'info');
+  }
+
+  function shareInsights() {
+    showMessage('Insights sharing feature coming soon!', 'info');
+  }
+</script>
+{% endblock %}

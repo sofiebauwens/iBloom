@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+
+{% block title %}Your Wellness Dashboard - Bloom{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>
+            <span class="dashboard-icon">📊</span>
+            Your Wellness Journey
+        </h1>
+        <p>Track your progress and insights over time</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+                <div class="stat-number" id="avgScore">--</div>
+                <div class="stat-label">Average Wellness Score</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+                <div class="stat-number" id="totalResponses">--</div>
+                <div class="stat-label">Daily Check-ins Completed</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-info">
+                <div class="stat-number" id="streakDays">--</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-info">
+                <div class="stat-number" id="trendDirection">--</div>
+                <div class="stat-label">7-Day Trend</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chart -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h2>Wellness Score Over Time</h2>
+            <div class="chart-controls">
+                <button class="chart-btn active" onclick="changeTimeframe('7d')">7 Days</button>
+                <button class="chart-btn" onclick="changeTimeframe('30d')">30 Days</button>
+                <button class="chart-btn" onclick="changeTimeframe('90d')">3 Months</button>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="wellnessChart" width="800" height="400"></canvas>
+        </div>
+    </div>
+
+    <!-- Latest Insights -->
+    <div class="insights-grid">
+        <div class="insight-card">
+            <div class="insight-header">
+                <h3><i class="fas fa-lightbulb"></i> Latest Insights</h3>
+                <span class="insight-date" id="lastCheckInDate">--</span>
+            </div>
+            <div id="latestAnalysis" class="insight-content">
+                <div class="loading-placeholder">
+                    <div class="placeholder-line"></div>
+                    <div class="placeholder-line short"></div>
+                    <div class="placeholder-line"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <div class="insight-header">
+                <h3><i class="fas fa-target"></i> Recommended Actions</h3>
+            </div>
+            <div id="recommendedActions" class="insight-content">
+                <div class="action-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Take a 10-minute break</strong>
+                        <p>Step away from your screen and take some deep breaths</p>
+                    </div>
+                </div>
+                <div class="action-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <strong>Try mindfulness module</strong>
+                        <p>Learn stress reduction techniques tailored to your needs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <div class="insight-header">
+                <h3><i class="fas fa-calendar-check"></i> Next Steps</h3>
+            </div>
+            <div class="insight-content">
+                <div class="next-checkin">
+                    <i class="fas fa-clipboard-list"></i>
+                    <div>
+                        <strong>Next Daily Check-in</strong>
+                        <p id="nextCheckInTime">Tomorrow at this time</p>
+                        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-sm">
+                            Start Now
+                        </a>
+                    </div>
+                </div>
+
+                <div class="wellness-resources">
+                    <h4>Wellness Resources</h4>
+                    <div class="resource-links">
+                        <a href="#" onclick="startBreathingExercise()" class="resource-link">
+                            <i class="fas fa-lungs"></i> Breathing Exercise
+                        </a>
+                        <a href="#" onclick="showEmergencyHelp()" class="resource-link">
+                            <i class="fas fa-phone"></i> Need Help Now?
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Tracking -->
+    <div class="progress-section">
+        <h2>Your Progress This Month</h2>
+        <div class="progress-grid">
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Energy Levels</span>
+                    <span class="progress-score" id="energyScore">7.2</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 72%"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Work Satisfaction</span>
+                    <span class="progress-score" id="satisfactionScore">6.8</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 68%"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Work-Life Balance</span>
+                    <span class="progress-score" id="balanceScore">5.9</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 59%"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Stress Management</span>
+                    <span class="progress-score" id="stressScore">6.5</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 65%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="dashboard-actions">
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">
+            <i class="fas fa-clipboard-list"></i>
+            Daily Check-in
+        </a>
+
+        <button onclick="exportData()" class="btn btn-secondary">
+            <i class="fas fa-download"></i>
+            Export My Data
+        </button>
+
+        <button onclick="shareProgress()" class="btn btn-secondary">
+            <i class="fas fa-share"></i>
+            Share Progress
+        </button>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-download"></i> Export Your Data</h2>
+            <span class="close" onclick="hideExportModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Download your wellness data for personal use or sharing with healthcare providers.</p>
+            <div class="export-options">
+                <button onclick="exportCSV()" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> CSV Format
+                </button>
+                <button onclick="exportPDF()" class="btn btn-primary">
+                    <i class="fas fa-file-pdf"></i> PDF Report
+                </button>
+                <button onclick="exportJSON()" class="btn btn-secondary">
+                    <i class="fas fa-file-code"></i> JSON Data
+                </button>
+            </div>
+            <div class="export-note">
+                <i class="fas fa-shield-alt"></i>
+                <small>All exports contain only your anonymous wellness data. No personal identifiers are included.</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let chartInstance = null;
+    let currentTimeframe = '7d';
+
+    // Initialize dashboard when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
+        updateNextCheckInTime();
+    });
+
+    async function loadDashboardData() {
+        try {
+            showLoading('Loading your wellness data...');
+
+            const response = await fetch('/api/user-data');
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update stats
+            updateStats(data);
+
+            // Create chart
+            if (data.chart_data && data.chart_data.length > 0) {
+                createWellnessChart(data.chart_data);
+            }
+
+            // Update insights
+            if (data.latest_analysis) {
+                updateLatestInsights(data.latest_analysis);
+            }
+
+            // Update progress bars
+            updateProgressBars(data.progress_data);
+
+        } catch (error) {
+            console.error('Dashboard load error:', error);
+            showMessage('Failed to load dashboard data', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function updateStats(data) {
+        // Animate numbers
+        if (data.avg_score !== undefined) {
+            animateNumber(document.getElementById('avgScore'), 0, Math.round(data.avg_score * 10) / 10);
+        }
+
+        if (data.total_responses !== undefined) {
+            animateNumber(document.getElementById('totalResponses'), 0, data.total_responses);
+        }
+
+        // Calculate streak (mock for now)
+        const streakElement = document.getElementById('streakDays');
+        const streak = data.streak || Math.floor(Math.random() * 7) + 1;
+        animateNumber(streakElement, 0, streak);
+
+        // Show trend
+        const trendElement = document.getElementById('trendDirection');
+        const trend = data.trend || (Math.random() > 0.5 ? '↗️' : '↘️');
+        trendElement.textContent = trend;
+    }
+
+    function createWellnessChart(data) {
+        const ctx = document.getElementById('wellnessChart').getContext('2d');
+
+        // Destroy existing chart
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        const chartData = {
+            labels: data.map(item => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Wellness Score',
+                data: data.map(item => item.score),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: '#667eea'
+                    }
+                }
+            }
+        };
+
+        chartInstance = new Chart(ctx, config);
+    }
+
+    function updateLatestInsights(analysis) {
+        const container = document.getElementById('latestAnalysis');
+
+        let html = '';
+
+        if (analysis.summary) {
+            html += `<div class="insight-summary">${analysis.summary}</div>`;
+        }
+
+        if (analysis.concerns && analysis.concerns.length > 0) {
+            html += '<div class="concerns-list">';
+            html += '<h4>Areas to Watch:</h4>';
+            analysis.concerns.forEach(concern => {
+                html += `<div class="concern-item"><i class="fas fa-exclamation-triangle"></i> ${concern}</div>`;
+            });
+            html += '</div>';
+        }
+
+        if (!html) {
+            html = '<div class="no-data">Complete a check-in to see insights</div>';
+        }
+
+        container.innerHTML = html;
+
+        // Update date
+        const dateElement = document.getElementById('lastCheckInDate');
+        if (dateElement) {
+            dateElement.textContent = 'Today';
+        }
+    }
+
+    function updateProgressBars(progressData) {
+        if (!progressData) return;
+
+        // Update each progress bar (mock data for now)
+        const categories = ['energy', 'satisfaction', 'balance', 'stress'];
+        categories.forEach(category => {
+            const score = progressData[category] || (Math.random() * 3 + 5); // 5-8 range
+            const element = document.getElementById(category + 'Score');
+            const bar = element.parentElement.nextElementSibling.querySelector('.progress-fill');
+
+            if (element) {
+                element.textContent = score.toFixed(1);
+            }
+
+            if (bar) {
+                bar.style.width = (score * 10) + '%';
+            }
+        });
+    }
+
+    function changeTimeframe(timeframe) {
+        currentTimeframe = timeframe;
+
+        // Update button states
+        document.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Reload data with new timeframe
+        loadDashboardData();
+    }
+
+    function updateNextCheckInTime() {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const timeString = tomorrow.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'short',
+            day: 'numeric'
+        });
+
+        const element = document.getElementById('nextCheckInTime');
+        if (element) {
+            element.textContent = `${timeString} at ${now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit'
+            })}`;
+        }
+    }
+
+    // Export functions
+    function exportData() {
+        document.getElementById('exportModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideExportModal() {
+        document.getElementById('exportModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    async function exportCSV() {
+        try {
+            const response = await fetch('/api/export-data?format=csv');
+            const blob = await response.blob();
+            downloadFile(blob, 'bloom-wellness-data.csv');
+            hideExportModal();
+            showMessage('Data exported successfully', 'success');
+        } catch (error) {
+            showMessage('Export failed', 'error');
+        }
+    }
+
+    async function exportPDF() {
+        try {
+            const response = await fetch('/api/export-data?format=pdf');
+            const blob = await response.blob();
+            downloadFile(blob, 'bloom-wellness-report.pdf');
+            hideExportModal();
+            showMessage('Report generated successfully', 'success');
+        } catch (error) {
+            showMessage('Export failed', 'error');
+        }
+    }
+
+    async function exportJSON() {
+        try {
+            const response = await fetch('/api/export-data?format=json');
+            const blob = await response.blob();
+            downloadFile(blob, 'bloom-wellness-data.json');
+            hideExportModal();
+            showMessage('Data exported successfully', 'success');
+        } catch (error) {
+            showMessage('Export failed', 'error');
+        }
+    }
+
+    function downloadFile(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    function shareProgress() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'My Wellness Progress - Bloom',
+                text: 'Check out my wellness journey with Bloom!',
+                url: window.location.href
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showMessage('Link copied to clipboard', 'success');
+            });
+        }
+    }
+</script>
+{% endblock %}

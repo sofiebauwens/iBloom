@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}iBloom - Burnout Prevention{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+
+    <!-- CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <span class="brand-icon">🌸</span>
+            <span class="brand-text">iBloom</span>
+        </div>
+
+        <div class="nav-links">
+            {% if session.user_id %}
+            <a href="{{ url_for('questionnaire') }}" class="nav-link">
+                <i class="fas fa-clipboard-list"></i> Daily Check-in
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="nav-link">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Emergency Help Button -->
+<button id="emergencyBtn" class="emergency-button" onclick="showEmergencyHelp()">
+    <i class="fas fa-exclamation-triangle"></i>
+    Need Help?
+</button>
+
+<!-- Emergency Help Modal -->
+<div id="emergencyModal" class="modal emergency-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-heart"></i> We're Here to Help</h2>
+            <span class="close" onclick="hideEmergencyHelp()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="help-options">
+                <div class="help-option immediate">
+                    <h3><i class="fas fa-lungs"></i> Breathing Exercise</h3>
+                    <p>Take a moment to center yourself</p>
+                    <button onclick="startBreathingExercise()" class="btn btn-primary">
+                        Start Breathing
+                    </button>
+                </div>
+
+                <div class="help-option crisis">
+                    <h3><i class="fas fa-phone"></i> Crisis Resources</h3>
+                    <p>If you're in immediate distress:</p>
+                    <div class="crisis-contacts">
+                        <p><strong>Crisis Text Line:</strong> Text HOME to 741741</p>
+                        <p><strong>National Suicide Prevention:</strong> 988</p>
+                        <p><strong>Employee Assistance:</strong> Contact HR</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Breathing Exercise Modal -->
+<div id="breathingModal" class="modal breathing-modal">
+    <div class="breathing-container">
+        <div class="breathing-circle" id="breathingCircle">
+            <div class="breathing-text">
+                <span id="breathingInstruction">Breathe In</span>
+                <div class="breathing-count" id="breathingCount">4</div>
+            </div>
+        </div>
+        <div class="breathing-controls">
+            <button onclick="stopBreathingExercise()" class="btn btn-secondary">
+                Stop Exercise
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Processing your responses...</p>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<div id="flashMessages" class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }}">
+        <span>{{ message }}</span>
+        <button onclick="this.parentElement.style.display='none'">×</button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+</div>
+
+<!-- Main Content -->
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>🌸 iBloom</h4>
+            <p>Anonymous burnout prevention for healthier workplaces</p>
+        </div>
+        <div class="footer-section">
+            <h4>Privacy First</h4>
+            <p>All responses are anonymous and encrypted</p>
+        </div>
+        <div class="footer-section">
+            <h4>Support</h4>
+            <p>Questions? Contact your HR team</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2025 iBloom. Your people, their potential.</p>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
